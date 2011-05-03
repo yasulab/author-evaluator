@@ -1,0 +1,10 @@
+Usage:
+	python main.py FILENAME NUM_OF_WORDS
+
+There are 3 ways to determine a point by NUM_OF_WORDS.
+For example, if a following sentence is given,
+    "A python user is a pythonista."
+   
+    
+If NUM_OF_WORDS is
+   < 0: 
