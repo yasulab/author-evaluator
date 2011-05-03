@@ -1,7 +1,7 @@
 Usage:
 	python main.py FILENAME NUM_OF_WORDS
 
-There are 3 ways to put a point.
+There are 3 ways to put a pointer.
 For example, if a following sentence is given,
 
     "A python user is called pythonista."
