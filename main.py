@@ -16,53 +16,6 @@ def read_file(filename):
     input = open(filename, "r")
     return input.read()        
 
-def prompt():
-    filename = "alice.txt"
-    given_text = read_file(filename) # init text
-    print "Text Analyzer"
-    print "-------------"
-    help = \
-    "Commands:\n" \
-    + "\trand NUMBER   : Randomly pick a word given times.\n" \
-    + "\tread FILENAME : Read a given file.\n" \
-    + "\tstats         : Show stats of recently read text.\n" \
-    + "\thelp          : Show this.\n" \
-    + "\texit          : Exit.\n"
-    print help
-    print "Current Text: ", filename
-    print ""
-    word_dict = analyze(given_text)
-    while 1:
-        input = raw_input("["+filename+"]> ")
-        cmd_list = input.split(" ")
-        if cmd_list[0] == "exit":
-            exit()
-        elif cmd_list[0] == "help":
-            print help
-        elif cmd_list[0] == "rand":
-            if len(cmd_list) == 1:
-                print "Give me how many times you pick."
-                continue
-            times = int(cmd_list[1])
-            print "Number of words: %.f" % get_num_of_words(given_text)
-            print
-            pick_rand(given_text, times)
-        elif cmd_list[0] == "read":
-            if len(cmd_list) == 1:
-                print "Give me a filename."
-                continue
-            filename = cmd_list[1]
-            given_text = read_file(filename)
-        elif cmd_list[0] == "stats":
-            word_dict = analyze(given_text)
-            print "Number of words: %.f" % get_num_of_words(given_text)
-            print
-            show_dict(word_dict)
-        elif cmd_list[0] == "":
-            continue
-        else:
-            print "Unknown command: " + cmd_list[0]
-
 def get_num_of_words(given_text):
     return len(get_word_list(given_text))
 

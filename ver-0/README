@@ -1,0 +1,20 @@
+Usage:
+	python main.py FILENAME NUM_OF_WORDS
+
+There are 3 ways to put a point.
+For example, if a following sentence is given,
+
+    "A python user is called pythonista."
+
+and NUM_OF_WORDS is:
+    < 0 : The pointer is put from the last.
+      	  So, if given -2, it is put as follows:
+	-> "A python user is"
+	
+   == 0 : The point is after the last word.
+      	  So, the pointer is put after the last.
+      	-> "A python user is called pythonista."
+	
+    > 0 : The pointer is put from the first.
+      	  So, if given 2, it is put as follows:
+        -> "A python"
