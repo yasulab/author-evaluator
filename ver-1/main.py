@@ -11,6 +11,7 @@ from optparse import OptionParser
 COUNTER = 0
 WORD = 1
 VFLAG = False
+START = "START"
 
 def read_file(filename):
     if os.path.exists('./'+filename) == False:
@@ -22,14 +23,21 @@ def read_file(filename):
 def get_num_of_words(given_text):
     return len(get_word_list(given_text))
 
-def pick_rand(word_dict, last_word):
+def sum_of_table(table):
+    sum = 0.0
+    for word in sorted(table.keys()):
+        #print word, table[word]
+        sum += float(table[word])
+    return sum
+
+def pick_rand(ptable, last_word):
     next_word = ""
-    if word_dict.has_key(last_word):
-        rand = random.random() * len(word_dict[last_word])
-        index = int(math.floor(rand))
+    if ptable.has_key(last_word):
+        rand = random.random() * sum_of_table(ptable[last_word])
+        #print rand
         counter = 0
-        for i,word in enumerate(word_dict[last_word]):
-            counter += word_dict[last_word][word]
+        for word in ptable[last_word]:
+            counter += ptable[last_word][word]
             if counter >= rand:
                 next_word = word
                 break
@@ -47,29 +55,29 @@ def get_ptable_len(ptable):
 def show_all_ptable(ptable):
     ptable_len = get_ptable_len(ptable)
     sum_prob = 0
-    for word in ptable:
-        print "WORD |\tPROB[%]  | NEXT_WORD\t"
+    for word in sorted(ptable.keys()):
+        print "WORD |\tPROB     | NEXT_WORD\t"
         print word
-        for nw in ptable[word]:
-            print "\t%1f | %s" % ((float(ptable[word][nw]) / \
-                                  float(ptable_len))*100,
-                                  nw)
+        for nw in sorted(ptable[word].keys()):
+            print "\t%1f | %s" % (ptable[word][nw], nw)
         print
     print
     
 def get_word_list(text):
     p = re.compile(r'\W+')
-    return  p.split(text)
+    list = p.split(text)
+    for i,word in enumerate(list):
+        if not word:
+            list.pop(i)
+    return list
 
 def get_unigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
     unigram = dict()
     num_of_words = 0.0
     for word in word_list:
-        if not word:
-            continue
         word = word.lower()
-        unigram[word] = unigram.get(word, 0) + 1
+        unigram[word] = float(unigram.get(word, 0) + 1.0) / len(word_list)
         num_of_words += 1.0
         #print num_of_words, given_num_of_words
         if given_num_of_words == 0:
@@ -82,17 +90,16 @@ def get_bigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
     word_dict = dict()
     num_of_words = 0.0
-    prev_word = ""
+    prev_word = START
     for word in word_list:
-        if not word:
-            continue
         word = word.lower()
         if not word_dict.has_key(prev_word):
             #print word
             word_dict[prev_word] = dict()
         #print "DUP: ", word
         word_dict[prev_word][word] = \
-             word_dict.get(prev_word, WORD).get(word, COUNTER) + 1
+             float(word_dict.get(prev_word, WORD).get(word, COUNTER)+1.0) \
+             / len(word_list)
         num_of_words += 1.0
         prev_word = word
         #print num_of_words, given_num_of_words
@@ -130,13 +137,17 @@ def get_reversed_given_num(given_text, given_num_of_words):
 def create_ptable(unigram, bigram):
     ptable = copy.deepcopy(bigram)
     for pw in bigram:
-        if not pw:
-            continue
         for w in bigram[pw]:
-            """
-            P(w|prev) = (P(prev|w)P(w)) / P(prev)
-            """
-            ptable[pw][w] = (bigram[pw][w] * unigram[w])/unigram[pw]
+            if pw == START:
+                """
+                P(w|START) = P(w)
+                """
+                ptable[pw][w] = unigram[w]
+            else:
+                """
+                P(w|prev) = (P(prev|w)P(w)) / P(prev)
+                """
+                ptable[pw][w] = (bigram[pw][w] * unigram[w])/unigram[pw]
     return ptable
         
 if __name__ == "__main__":
