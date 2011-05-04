@@ -34,11 +34,12 @@ def pick_rand(ptable, last_word):
     next_word = ""
     if ptable.has_key(last_word):
         rand = random.random() * sum_of_table(ptable[last_word])
+        #print sum_of_table(ptable[last_word])
         #print rand
         counter = 0
-        for word in ptable[last_word]:
+        for word in sorted(ptable[last_word].keys()):
             counter += ptable[last_word][word]
-            if counter >= rand:
+            if rand < counter:
                 next_word = word
                 break
     else:
@@ -46,11 +47,10 @@ def pick_rand(ptable, last_word):
     return next_word
 
 def get_ptable_len(ptable):
-    num_of_words = 0.0
+    ptable_len = 0.0
     for word in ptable:
-        for next_word in ptable[word]:
-            num_of_words += ptable[word][next_word]
-    return num_of_words
+        ptable_len += len(ptable[word])
+    return ptable_len
 
 def show_all_ptable(ptable):
     ptable_len = get_ptable_len(ptable)
@@ -77,29 +77,32 @@ def get_unigram(given_text, given_num_of_words):
     num_of_words = 0.0
     for word in word_list:
         word = word.lower()
-        unigram[word] = float(unigram.get(word, 0) + 1.0) / len(word_list)
+        #unigram[word] = float(unigram.get(word, 0) + 1.0) / len(word_list)
+        unigram[word] = (unigram.get(word, 0) + 1.0)
+        #print word, unigram[word]
         num_of_words += 1.0
         #print num_of_words, given_num_of_words
         if given_num_of_words == 0:
             continue
         elif num_of_words > float(given_num_of_words):
             break
+    for word in unigram:
+        unigram[word] = unigram[word] / len(unigram)
+        #print word, unigram[word]
     return unigram
 
 def get_bigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
-    word_dict = dict()
+    bigram = dict()
     num_of_words = 0.0
     prev_word = START
     for word in word_list:
         word = word.lower()
-        if not word_dict.has_key(prev_word):
+        if not bigram.has_key(prev_word):
             #print word
-            word_dict[prev_word] = dict()
+            bigram[prev_word] = dict()
         #print "DUP: ", word
-        word_dict[prev_word][word] = \
-             float(word_dict.get(prev_word, WORD).get(word, COUNTER)+1.0) \
-             / len(word_list)
+        bigram[prev_word][word] = bigram.get(prev_word, WORD).get(word, COUNTER)+1.0
         num_of_words += 1.0
         prev_word = word
         #print num_of_words, given_num_of_words
@@ -107,7 +110,11 @@ def get_bigram(given_text, given_num_of_words):
             continue
         elif num_of_words > float(given_num_of_words):
             break
-    return word_dict
+    for pw in bigram:
+        for w in bigram[pw]:
+            bigram[pw][w] = bigram[pw][w] / get_ptable_len(bigram)
+            #print pw, w, bigram[pw][w], get_ptable_len(bigram)    
+    return bigram
 
 def get_last_sentence(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
@@ -149,6 +156,24 @@ def create_ptable(unigram, bigram):
                 """
                 ptable[pw][w] = (bigram[pw][w] * unigram[w])/unigram[pw]
     return ptable
+
+def create_log_ptable(unigram, bigram):
+    ptable = copy.deepcopy(bigram)
+    for pw in bigram:
+        for w in bigram[pw]:
+            if pw == START:
+                """
+                log(P(w|START)) = log(P(w))
+                """
+                ptable[pw][w] = math.log(unigram[w])
+            else:
+                """
+                log(P(w|prev)) = log(P(prev|w)) + log(P(w)) - log(P(prev))
+                """
+                ptable[pw][w] = math.log(bigram[pw][w]) + \
+                                math.log(unigram[w]) - \
+                                math.log(unigram[pw])
+    return ptable
         
 if __name__ == "__main__":
     parser = OptionParser()
@@ -170,6 +195,7 @@ if __name__ == "__main__":
         default=0,
         help="choose how many words are input. This program reads all words  by default. Please see README for details."
         )
+    
     (options, args) = parser.parse_args() 
     VFLAG = options.verbose
     filename = options.file
@@ -190,5 +216,5 @@ if __name__ == "__main__":
     print
     last_word = last_sentence[len(last_sentence)-1]
     #print last_word
-    print "Next word:", pick_rand(bigram, last_word)
+    print "Next word:", pick_rand(ptable, last_word)
     

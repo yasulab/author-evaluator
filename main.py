@@ -34,11 +34,12 @@ def pick_rand(ptable, last_word):
     next_word = ""
     if ptable.has_key(last_word):
         rand = random.random() * sum_of_table(ptable[last_word])
+        #print sum_of_table(ptable[last_word])
         #print rand
         counter = 0
-        for word in ptable[last_word]:
+        for word in sorted(ptable[last_word].keys()):
             counter += ptable[last_word][word]
-            if counter >= rand:
+            if rand < counter:
                 next_word = word
                 break
     else:
@@ -55,7 +56,7 @@ def show_all_ptable(ptable):
     ptable_len = get_ptable_len(ptable)
     sum_prob = 0
     for word in sorted(ptable.keys()):
-        print "WORD |\tSCORE     | NEXT_WORD\t"
+        print "WORD |\tPROB     | NEXT_WORD\t"
         print word
         for nw in sorted(ptable[word].keys()):
             print "\t%1f | %s" % (ptable[word][nw], nw)
@@ -88,13 +89,6 @@ def get_unigram(given_text, given_num_of_words):
     for word in unigram:
         unigram[word] = unigram[word] / len(unigram)
         #print word, unigram[word]
-    return unigram
-
-def get_log_unigram(given_text, given_num_of_words):
-    unigram = get_unigram(given_text, given_num_of_words)
-    for w in unigram:
-        unigram[w] = math.log(unigram[w])
-        #print unigram[w]
     return unigram
 
 def get_bigram(given_text, given_num_of_words):
@@ -162,6 +156,24 @@ def create_ptable(unigram, bigram):
                 """
                 ptable[pw][w] = (bigram[pw][w] * unigram[w])/unigram[pw]
     return ptable
+
+def create_log_ptable(unigram, bigram):
+    ptable = copy.deepcopy(bigram)
+    for pw in bigram:
+        for w in bigram[pw]:
+            if pw == START:
+                """
+                log(P(w|START)) = log(P(w))
+                """
+                ptable[pw][w] = math.log(unigram[w])
+            else:
+                """
+                log(P(w|prev)) = log(P(prev|w)) + log(P(w)) - log(P(prev))
+                """
+                ptable[pw][w] = math.log(bigram[pw][w]) + \
+                                math.log(unigram[w]) - \
+                                math.log(unigram[pw])
+    return ptable
         
 if __name__ == "__main__":
     parser = OptionParser()
@@ -183,6 +195,7 @@ if __name__ == "__main__":
         default=0,
         help="choose how many words are input. This program reads all words  by default. Please see README for details."
         )
+    
     (options, args) = parser.parse_args() 
     VFLAG = options.verbose
     filename = options.file
@@ -193,7 +206,7 @@ if __name__ == "__main__":
     given_num_of_words = get_reversed_given_num(given_text, given_num_of_words)
     unigram = get_unigram(given_text, given_num_of_words)
     bigram = get_bigram(given_text, given_num_of_words)
-    ptable = create_ptable(unigram, bigram)
+    ptable = create_log_ptable(unigram, bigram)
     
     if VFLAG == True: show_all_ptable(ptable)
     last_sentence = get_last_sentence(given_text, given_num_of_words)
@@ -203,5 +216,5 @@ if __name__ == "__main__":
     print
     last_word = last_sentence[len(last_sentence)-1]
     #print last_word
-    print "Next word:", pick_rand(bigram, last_word)
+    print "Next word:", pick_rand(ptable, last_word)
     
