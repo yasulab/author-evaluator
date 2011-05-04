@@ -4,10 +4,13 @@
 import sys
 import re
 import os
+import copy
 import math, random
+from optparse import OptionParser
 
 COUNTER = 0
 WORD = 1
+VFLAG = False
 
 def read_file(filename):
     if os.path.exists('./'+filename) == False:
@@ -34,25 +37,23 @@ def pick_rand(word_dict, last_word):
         next_word = "There are no possible words."
     return next_word
 
-def get_dict_length(word_dict):
-    """
+def get_ptable_len(ptable):
     num_of_words = 0.0
-    for count,word in word_dict:
-        num_of_words += count
-    """
-    return len(word_dict)
+    for word in ptable:
+        for next_word in ptable[word]:
+            num_of_words += ptable[word][next_word]
+    return num_of_words
 
-def show_all_dict(word_dict):
-    num_of_words = get_dict_length(word_dict)
+def show_all_ptable(ptable):
+    ptable_len = get_ptable_len(ptable)
     sum_prob = 0
-    for i,word in enumerate(word_dict):
-        print "\tCOUNT |\tPROB[%]   | NEXT_WORD\t"
+    for word in ptable:
+        print "WORD |\tPROB[%]  | NEXT_WORD\t"
         print word
-        for pw in word_dict[word]:
-            print "\t%5d | %1f | %s" % (word_dict[word][pw],
-                                        float(word_dict[word][pw]) / \
-                                        float(len(word_dict[word]))*100,
-                                        pw)
+        for nw in ptable[word]:
+            print "\t%1f | %s" % ((float(ptable[word][nw]) / \
+                                  float(ptable_len))*100,
+                                  nw)
         print
     print
     
@@ -62,24 +63,20 @@ def get_word_list(text):
 
 def get_unigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
-    word_dict = dict()
+    unigram = dict()
     num_of_words = 0.0
     for word in word_list:
         if not word:
             continue
         word = word.lower()
-        word_dict[word] = word_dict.get(word, 0) + 1
+        unigram[word] = unigram.get(word, 0) + 1
         num_of_words += 1.0
         #print num_of_words, given_num_of_words
         if given_num_of_words == 0:
             continue
         elif num_of_words > float(given_num_of_words):
             break
-    # sort by count
-    word_dict = [(v,k) for k,v in word_dict.items()]
-    word_dict.sort()
-    word_dict.reverse()
-    return word_dict
+    return unigram
 
 def get_bigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
@@ -103,25 +100,6 @@ def get_bigram(given_text, given_num_of_words):
             continue
         elif num_of_words > float(given_num_of_words):
             break
-    # sort by count
-    #print word_dict
-    """
-    word_dict = [(v,k) for k,v in word_dict.items()]
-    word_dict.sort()
-    word_dict.reverse()
-    """
-    """
-    for i in range(len(word_dict)):
-        print word_dict[i][0]
-        temp_dict = word_dict[i][0].items()
-        print temp_dict
-        temp_dict = [(v,k) for v,k in temp_dict]
-        print temp_dict
-        word_dict[i][0].update(temp_dict)
-        print word_dict[i][0]
-    #print word_dict
-    #exit()
-    """
     return word_dict
 
 def get_last_sentence(given_text, given_num_of_words):
@@ -148,20 +126,52 @@ def get_reversed_given_num(given_text, given_num_of_words):
         return len(word_list) + given_num_of_words
     else:
         return given_num_of_words
-    
+
+def create_ptable(unigram, bigram):
+    ptable = copy.deepcopy(bigram)
+    for pw in bigram:
+        if not pw:
+            continue
+        for w in bigram[pw]:
+            """
+            P(w|prev) = (P(prev|w)P(w)) / P(prev)
+            """
+            ptable[pw][w] = (bigram[pw][w] * unigram[w])/unigram[pw]
+    return ptable
+        
 if __name__ == "__main__":
-    argv_len = len(sys.argv)
-    if not argv_len == 3:
-        print "Usage: python main.py FILENAME NUM_OF_WORDS"
-        exit()
-    filename = sys.argv[1]
-    given_num_of_words = int(sys.argv[2])
-    #print given_num_of_words
-    #prompt()
+    parser = OptionParser()
+    parser.add_option(
+        "-v", "--verbose",
+        action="store_true",
+        default=False,
+        help="display information verbosely."
+        )
+    parser.add_option(
+        "-f", "--file", 
+        type="string",
+        default="vicar-excerpt.txt",
+        help="choose a text file for analyzing. This program uses 'vicar-excerpt.txt' by default."
+        )
+    parser.add_option(
+        "-n", "--num", 
+        type="int",
+        default=0,
+        help="choose how many words are input. This program reads all words  by default. Please see README for details."
+        )
+    (options, args) = parser.parse_args() 
+    VFLAG = options.verbose
+    filename = options.file
+    given_num_of_words = options.num
+    
     given_text = read_file(filename) # init text
+    # adapt for a negative input.
     given_num_of_words = get_reversed_given_num(given_text, given_num_of_words)
-    word_dict = get_bigram(given_text, given_num_of_words)
-    show_all_dict(word_dict)
+    unigram = get_unigram(given_text, given_num_of_words)
+    bigram = get_bigram(given_text, given_num_of_words)
+    ptable = create_ptable(unigram, bigram)
+    
+    if VFLAG == True: show_all_ptable(ptable)
     last_sentence = get_last_sentence(given_text, given_num_of_words)
     print "Last Sentence:",
     for word in last_sentence:
@@ -169,14 +179,5 @@ if __name__ == "__main__":
     print
     last_word = last_sentence[len(last_sentence)-1]
     #print last_word
-    print "Next word:", pick_rand(word_dict, last_word)
+    print "Next word:", pick_rand(bigram, last_word)
     
-    
-
-
-
-
-
-
-
-

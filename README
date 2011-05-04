@@ -1,5 +1,13 @@
-Usage:
-	python main.py FILENAME NUM_OF_WORDS
+Usage: main.py [options]
+
+Options:
+ -h, --help            show this help message and exit
+ -v, --verbose         display information verbosely.
+ -f FILE, --file=FILE  choose a text file for analyzing.
+    	  	       This program uses 'vicar-excerpt.txt' by default.
+ -n NUM, --num=NUM     choose how many words are input.
+    	 	       This program reads all words ('0') by default.
+		       Please see README for details.
 
 There are 3 ways to put a pointer.
 For example, if a following sentence is given,
