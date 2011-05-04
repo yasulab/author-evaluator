@@ -1,4 +1,11 @@
-Usage: main.py FILENAME_1 FILENAME_2 TEXT
+Description:
+
+Given 2 text files, determine which author would be the author of a given text.
+
+Usage:
+
+  $ python main.py FILENAME_1 FILENAME_2 TEXT
 
 Example:
-  python main.py connect4-readme.txt vicar-excerpt.txt "The one vanquished by a single blow."
+
+  $ python main.py connect4-readme.txt vicar-excerpt.txt "The one vanquished by a single blow."

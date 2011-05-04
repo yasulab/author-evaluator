@@ -1,4 +1,4 @@
 Usage: main.py FILENAME_1 FILENAME_2 TEXT
 
 Example:
-	python main.py connect
+  python main.py connect4-readme.txt vicar-excerpt.txt "The one vanquished by a single blow."

@@ -1,28 +1,10 @@
-Usage: main.py [options]
+Author: Yohei YASUKAWA
+Date: 2010/05/03
+Mail: yasulab@gmail.com
 
-Options:
- -h, --help            show this help message and exit
- -v, --verbose         display information verbosely.
- -f FILE, --file=FILE  choose a text file for analyzing.
-    	  	       This program uses 'vicar-excerpt.txt' by default.
- -n NUM, --num=NUM     choose how many words are input.
-    	 	       This program reads all words ('0') by default.
-		       Please see README for details.
+Dir Structure:
+- ver-0: unigram babbler
+- ver-1: bigram babbler
+- ver-2: author evaluator
 
-There are 3 ways to put a pointer.
-For example, if a following sentence is given,
 
-    "A python user is called pythonista."
-
-and NUM_OF_WORDS is:
-    < 0 : The pointer is put from the last.
-      	  So, if given -2, it is put as follows:
-	-> "A python user is"
-	
-   == 0 : The point is after the last word.
-      	  So, the pointer is put after the last.
-      	-> "A python user is called pythonista."
-	
-    > 0 : The pointer is put from the first.
-      	  So, if given 2, it is put as follows:
-        -> "A python"
