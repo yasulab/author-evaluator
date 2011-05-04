@@ -46,17 +46,16 @@ def pick_rand(ptable, last_word):
     return next_word
 
 def get_ptable_len(ptable):
-    num_of_words = 0.0
+    ptable_len = 0.0
     for word in ptable:
-        for next_word in ptable[word]:
-            num_of_words += ptable[word][next_word]
-    return num_of_words
+        ptable_len += len(ptable[word])
+    return ptable_len
 
 def show_all_ptable(ptable):
     ptable_len = get_ptable_len(ptable)
     sum_prob = 0
     for word in sorted(ptable.keys()):
-        print "WORD |\tPROB     | NEXT_WORD\t"
+        print "WORD |\tSCORE     | NEXT_WORD\t"
         print word
         for nw in sorted(ptable[word].keys()):
             print "\t%1f | %s" % (ptable[word][nw], nw)
@@ -77,29 +76,39 @@ def get_unigram(given_text, given_num_of_words):
     num_of_words = 0.0
     for word in word_list:
         word = word.lower()
-        unigram[word] = float(unigram.get(word, 0) + 1.0) / len(word_list)
+        #unigram[word] = float(unigram.get(word, 0) + 1.0) / len(word_list)
+        unigram[word] = (unigram.get(word, 0) + 1.0)
+        #print word, unigram[word]
         num_of_words += 1.0
         #print num_of_words, given_num_of_words
         if given_num_of_words == 0:
             continue
         elif num_of_words > float(given_num_of_words):
             break
+    for word in unigram:
+        unigram[word] = unigram[word] / len(unigram)
+        #print word, unigram[word]
+    return unigram
+
+def get_log_unigram(given_text, given_num_of_words):
+    unigram = get_unigram(given_text, given_num_of_words)
+    for w in unigram:
+        unigram[w] = math.log(unigram[w])
+        #print unigram[w]
     return unigram
 
 def get_bigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
-    word_dict = dict()
+    bigram = dict()
     num_of_words = 0.0
     prev_word = START
     for word in word_list:
         word = word.lower()
-        if not word_dict.has_key(prev_word):
+        if not bigram.has_key(prev_word):
             #print word
-            word_dict[prev_word] = dict()
+            bigram[prev_word] = dict()
         #print "DUP: ", word
-        word_dict[prev_word][word] = \
-             float(word_dict.get(prev_word, WORD).get(word, COUNTER)+1.0) \
-             / len(word_list)
+        bigram[prev_word][word] = bigram.get(prev_word, WORD).get(word, COUNTER)+1.0
         num_of_words += 1.0
         prev_word = word
         #print num_of_words, given_num_of_words
@@ -107,7 +116,11 @@ def get_bigram(given_text, given_num_of_words):
             continue
         elif num_of_words > float(given_num_of_words):
             break
-    return word_dict
+    for pw in bigram:
+        for w in bigram[pw]:
+            bigram[pw][w] = bigram[pw][w] / get_ptable_len(bigram)
+            #print pw, w, bigram[pw][w], get_ptable_len(bigram)    
+    return bigram
 
 def get_last_sentence(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
