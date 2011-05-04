@@ -1,0 +1,7 @@
+Usage:
+
+  $ python api-translator.py FILENAME TYPE
+
+TYPE should be one of the followings:
+- ja2en: Translate a given Japanese text into English
+- en2ja: Translate a given English text into Japanese

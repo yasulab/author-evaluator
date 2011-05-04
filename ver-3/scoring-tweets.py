@@ -12,6 +12,7 @@ COUNTER = 0
 WORD = 1
 VFLAG = False
 START = "START"
+P_OF_UNKNOWN_WORD = 10**-8
 
 def read_file(filename):
     if os.path.exists('./'+filename) == False:
@@ -91,6 +92,12 @@ def get_unigram(given_text, given_num_of_words):
         #print word, unigram[word]
     return unigram
 
+def get_log_unigram(given_text, given_num_of_words):
+    unigram = get_unigram(given_text, given_num_of_words)
+    for word in unigram:
+        unigram[word] = math.log(unigram[word])
+    return unigram
+
 def get_bigram(given_text, given_num_of_words):
     word_list = get_word_list(given_text)
     bigram = dict()
@@ -158,63 +165,65 @@ def create_ptable(unigram, bigram):
     return ptable
 
 def create_log_ptable(unigram, bigram):
-    ptable = copy.deepcopy(bigram)
-    for pw in bigram:
-        for w in bigram[pw]:
-            if pw == START:
-                """
-                log(P(w|START)) = log(P(w))
-                """
-                ptable[pw][w] = math.log(unigram[w])
-            else:
-                """
-                log(P(w|prev)) = log(P(prev|w)) + log(P(w)) - log(P(prev))
-                """
-                ptable[pw][w] = math.log(bigram[pw][w]) + \
-                                math.log(unigram[w]) - \
-                                math.log(unigram[pw])
-    return ptable
-        
-if __name__ == "__main__":
-    parser = OptionParser()
-    parser.add_option(
-        "-v", "--verbose",
-        action="store_true",
-        default=False,
-        help="display information verbosely."
-        )
-    parser.add_option(
-        "-f", "--file", 
-        type="string",
-        default="vicar-excerpt.txt",
-        help="choose a text file for analyzing. This program uses 'vicar-excerpt.txt' by default."
-        )
-    parser.add_option(
-        "-n", "--num", 
-        type="int",
-        default=0,
-        help="choose how many words are input. This program reads all words  by default. Please see README for details."
-        )
-    
-    (options, args) = parser.parse_args() 
-    VFLAG = options.verbose
-    filename = options.file
-    given_num_of_words = options.num
-    
-    given_text = read_file(filename) # init text
-    # adapt for a negative input.
-    given_num_of_words = get_reversed_given_num(given_text, given_num_of_words)
-    unigram = get_unigram(given_text, given_num_of_words)
-    bigram = get_bigram(given_text, given_num_of_words)
     ptable = create_ptable(unigram, bigram)
+    for pw in ptable:
+        for w in ptable[pw]:
+            ptable[pw][w] = math.log(ptable[pw][w])
+    return ptable
+
+def create_log_ptable_from_filename(filename):
+    given_text = read_file(filename)
+    unigram = get_unigram(given_text, 0)
+    bigram = get_bigram(given_text, 0)
+    ptable = create_log_ptable(unigram, bigram)
+    return ptable
+
+def get_score(ptable, text):
+    word_list = get_word_list(text)
+    pw = "START"
+    result = 0.0
+    for w in word_list:
+        w = w.lower()
+        if ptable.has_key(pw) and ptable[pw].has_key(w):
+            result += ptable[pw][w]
+        else:
+            """
+            The bigram is an unknown set.
+            """
+            result += math.log(P_OF_UNKNOWN_WORD)
+        pw = w
+    return result
+
+if __name__ == "__main__":
+    argv_len = len(sys.argv)
+    if not argv_len == 3:
+        print "Usage: python scoring-tweets.py YOUR_TWEETS TWEETS_LIST"
+        exit()
+    your_tweets_filename = sys.argv[1]
+    tweets_list_filename = sys.argv[2]
     
-    if VFLAG == True: show_all_ptable(ptable)
-    last_sentence = get_last_sentence(given_text, given_num_of_words)
-    print "Last Sentence:",
-    for word in last_sentence:
-        print word,
-    print
-    last_word = last_sentence[len(last_sentence)-1]
-    #print last_word
-    print "Next word:", pick_rand(ptable, last_word)
+    ptable = create_log_ptable_from_filename(your_tweets_filename)
+    tweets_list = read_file(tweets_list_filename).split('\n')
+
+    """
+    print "******************"
+    print "*%s *" % your_tweets_filename
+    print "******************"
+    show_all_ptable(ptable)
+    """
+
+    score_table = {}
+    for tweet in tweets_list:
+        if not tweet:
+            continue
+        score_table[tweet] = get_score(ptable, tweet)
+
+    i = 1
+    for tweet,score in sorted(score_table.items(),
+                              key=lambda x:x[1],
+                              reverse=True):
+        print "%2d: %s\n" % (i, tweet)
+        i += 1
+        
+    
     

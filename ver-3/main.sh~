@@ -1,0 +1,19 @@
+#!/bin/sh
+printf "Getting your recent tweets... "
+python ./simple-tag-getter/tag-getter.py http://twitter.com/yasulab span class=entry-content > recent-your-tweets.txt
+printf "Done.\n"
+
+printf "Translating the tweets into English... "
+python ./ja2en/api-translator.py recent-your-tweets.txt ja2en > recent-your-tweets_en.txt
+printf "Done.\n"
+
+printf "Getting the tweets in the list... "
+python ./simple-tag-getter/tag-getter.py http://twitter.com/yasulab/watch span class=entry-content > watch-list-tweets.txt
+printf "Done.\n"
+
+printf "Translating the tweets into English... "
+python ./ja2en/api-translator.py watch-list-tweets.txt ja2en > watch-list-tweets_en.txt
+printf "Done.\n"
+
+
+#python scoring-tweets.py recent-your-tweets_en.txt watch-list-tweets_en.txt
