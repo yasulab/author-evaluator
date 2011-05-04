@@ -1,0 +1,4 @@
+Usage: main.py FILENAME_1 FILENAME_2 TEXT
+
+Example:
+	python main.py connect
