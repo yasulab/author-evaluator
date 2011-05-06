@@ -10,4 +10,4 @@ TYPE should be one of the followings:
 NOTE:
 
   This API has limited number of use. If you exceed the number,
-  this program returns HTTP 403 - Forbidden.
+  this program returns HTTP Error 403 - Forbidden.

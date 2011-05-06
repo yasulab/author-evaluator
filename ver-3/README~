@@ -39,13 +39,12 @@ similar words to what you recently tweeted.
 Requirement
 -----------
 
-Nothing.
+- lxml
+-- Download: http://lxml.de/index.html#download
+-- Or, type following command to download.
 
-NOTE:
-This program actually requires lxml library,
-but the library is used via the web (runs on my own server).
-If you would like to use lxml in local,
-you can use tag-getter.py instead of tag-getter-without-lxml.py.
+   $ git clone https://github.com/lxml/lxml.git lxml
+
    
 Usage
 -----

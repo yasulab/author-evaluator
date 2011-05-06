@@ -1,3 +1,8 @@
+Description:
+
+Given a text file and a language translating into,
+translate the text into the language.
+
 Usage:
 
   $ python translator.py FILENAME TYPE
